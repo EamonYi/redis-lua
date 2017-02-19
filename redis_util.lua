@@ -60,38 +60,38 @@ redisutil.pipline = function(cmd, key, ...)
     red:close()
     return
 
-    local results, err = red:commit_pipeline()
-    if not results then
-        ngx.say("failed to commit the pipelined requests: ", err)
-        return
-    end
-
-    for i, res in ipairs(results) do
-        if type(res) == "table" then
-            if res[1] == false then
-                ngx.say("failed to run command ", i, ": ", res[2])
-            else
-                -- process the table value
-            end
-        else
-            -- process the scalar value
-        end
-    end
-
-    -- put it into the connection pool of size 100,
-    -- with 10 seconds max idle time
-    local ok, err = red:set_keepalive(10000, 100)
-    if not ok then
-        ngx.say("failed to set keepalive: ", err)
-        return
-    end
-
-    -- or just close the connection right away:
-    -- local ok, err = red:close()
-    -- if not ok then
-    --     ngx.say("failed to close: ", err)
+    -- local results, err = red:commit_pipeline()
+    -- if not results then
+    --     ngx.say("failed to commit the pipelined requests: ", err)
     --     return
     -- end
+
+    -- for i, res in ipairs(results) do
+    --     if type(res) == "table" then
+    --         if res[1] == false then
+    --             ngx.say("failed to run command ", i, ": ", res[2])
+    --         else
+    --             -- process the table value
+    --         end
+    --     else
+    --         -- process the scalar value
+    --     end
+    -- end
+
+    -- -- put it into the connection pool of size 100,
+    -- -- with 10 seconds max idle time
+    -- local ok, err = red:set_keepalive(10000, 100)
+    -- if not ok then
+    --     ngx.say("failed to set keepalive: ", err)
+    --     return
+    -- end
+
+    -- -- or just close the connection right away:
+    -- -- local ok, err = red:close()
+    -- -- if not ok then
+    -- --     ngx.say("failed to close: ", err)
+    -- --     return
+    -- -- end
 end
 
 -- -- pipline in redis.lua sames to be non-atomic, so it is needed to get a multi-exec fucntion
