@@ -12,5 +12,5 @@ local incr_str = 'local exist_key = redis.call("exists", KEYS[1])\n' ..
 'end\n' ..
 'return 0'
 
-ngx.say(redisutil.cmd('eval',incr_str, key))
+ngx.say(redisutil.cmd('eval',incr_str, 1, key))
 redisutil.pipline() 
