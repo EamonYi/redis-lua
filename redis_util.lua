@@ -8,10 +8,7 @@ redisutil.cmd = function(cmd, key, ...)
         ngx.say("failed to connect: ", err)
         return
     end
-
     
-    end
-
     ok, err = red[cmd](red, key, ...)
     -- ok, err = red:[cmd](key, ...)
     if not ok then
@@ -24,7 +21,8 @@ redisutil.cmd = function(cmd, key, ...)
     ok, err = red:set_keepalive(10000, 100)
     if not ok then
         ngx.say("failed to set keepalive: ", err)
-    return nil, false
+        return nil, false
+    end
 
     return ok
     
