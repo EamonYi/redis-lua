@@ -17,7 +17,8 @@ redisutil.cmd = function(cmd, key, ...)
         return nil, false
     end
 
-    ok, err = red:[cmd](key, ...)
+    ok, err = red[cmd](red, key, ...)
+    -- ok, err = red:[cmd](key, ...)
     if not ok then
         ngx.say("failed to " .. cmd .. " " .. key ..": ", err)
         return nil, false
