@@ -1,0 +1,3 @@
+
+
+redis = require "redis"
