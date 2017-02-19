@@ -56,7 +56,7 @@ redisutil.pipline = function(cmd, key, ...)
     ok, err = red:get("horse")
     ngx.say(ok, err)
     ok, err = red:exec()
-    ngx.say("exec " .. ok, err)
+    ngx.say("exec " .. cjson.encode(ok), err)
     red:close()
     return
 
