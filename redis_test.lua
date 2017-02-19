@@ -1,1 +1,1 @@
-ngx.say(redisutil.cmd('get','test'))
+ngx.say(redisutil.cmd('set','test','123'))
