@@ -112,7 +112,7 @@ end
 
 redis_util.eval = function(shm_name, script_tb, ...)
     if not (shm_name and script_tb.script) then 
-        nlog.warn("redis eval error, shm_name=" .. tostring(shm_name) .. ", script=" .. string.sub(script_tb.script,1, 50))
+        nlog.warn("redis eval error, shm_name=" .. tostring(shm_name) .. ", script=" .. string.sub(script_tb.script,1, 900))
         return nil, -1
     end
     local debug_str = "shm_name:"..shm_name .. " script[" .. string.sub(script_tb.script, 1, 50)
@@ -149,5 +149,53 @@ redis_util.eval = function(shm_name, script_tb, ...)
 
     return ret
 end
+
+-- atom
+redis_util.multi_exec = function(shm_name, cmd_tb)
+    if not (shm_name and #cmd_tb > 0) then 
+        nlog.warn("redis eval error, shm_name=" .. tostring(shm_name) .. ", cmd_tb=" .. cjson.encode(cmd_tb))
+        return nil, -1
+    end
+    local debug_str = "shm_name:"..shm_name .. " cmd_tb[" .. cjson.encode(cmd_tb)
+    debug_str = debug_str .. "]"
+
+    local red, err = redis_util.connect_db(shm_name, debug_str)
+    if 0 ~= err then
+        return nil, err
+    end
+
+    local ret = nil
+    ret, err = red:multi()
+    if "ok" ~= ret then
+        return nil, -1
+    end
+    local cmd_tmp = nil
+    for _, cmd_tmp in pairs(cmd_tb) do
+        if #cmd_tmp == 1 then
+            ret, err = red[cmd_tmp[1]](red)
+        else
+            ret, err = red[cmd_tmp[1]](red, unpack(cmd_tmp, 2))
+        end
+        if "QUEUEND" ~= ret then
+            return nil, -1
+        end
+    end
+    ret, err = red:exec()
+
+    local ok = nil
+    ok, err = red:set_keepalive(redisconf.keepalive.idle_time, redisconf.keepalive.pool_size)
+    if not ok then
+        -- 保持连接失败并不会影响实际数据
+        nlog.warn("set_keepalive failed!")
+    end
+
+    if nil == ret then
+        return ret, 0
+    end
+
+    return ret
+end
+
+
 
 return  redisutil
