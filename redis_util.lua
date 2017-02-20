@@ -110,5 +110,44 @@ end
 --     for 
 -- end
 
+redis_util.eval = function(shm_name, script_tb, ...)
+    if not (shm_name and script_tb.script) then 
+        nlog.warn("redis eval error, shm_name=" .. tostring(shm_name) .. ", script=" .. string.sub(script_tb.script,1, 50))
+        return nil, -1
+    end
+    local debug_str = "shm_name:"..shm_name .. " script[" .. string.sub(script_tb.script, 1, 50)
+    for k,v in ipairs({...}) do
+        debug_str = debug_str .. " " .. v
+    end
+    debug_str = debug_str .. "]"
+
+    local red, err = redis_util.connect_db(shm_name, debug_str)
+    if 0 ~= err then
+        return nil, err
+    end
+
+    --exec
+    local ret = nil
+    if "string" == type(script_tb.sha1) and string.len(script_tb.sha1) > 0 then
+        ret, err = red:evalsha(script_tb.sha1, ...)
+        ngx.say("evalsha:" .. cjson.encode(ret))
+    else
+        ret, err = red["script"](red,"load", script_tb.script)
+        if "string" == type(ret) and string.len(ret) > 0 then
+            script_tb.sha1 = ret
+        end
+        ret, err = red:evalsha(script_tb.sha1, ...)
+        ngx.say("evalsha:" .. cjson.encode(ret))
+    end
+
+    local ok = nil
+    ok, err = red:set_keepalive(redisconf.keepalive.idle_time, redisconf.keepalive.pool_size)
+    if not ok then
+        -- 保持连接失败并不会影响实际数据
+        nlog.warn("set_keepalive failed!")
+    end
+
+    return ret
+end
 
 return  redisutil
